@@ -38,11 +38,11 @@ class WordToPPTApp:
             text="Word to PowerPoint Converter",
             font=("Arial", 16, "bold")
         )
-        title_label.pack(pady=10)
+        title_label.pack(pady=5)
 
         # Frame for file selections
         frame = tk.Frame(self.root)
-        frame.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
+        frame.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
 
         # Word file selection
         tk.Label(frame, text="Word Document:", font=("Arial", 10, "bold")).grid(
@@ -75,7 +75,7 @@ class WordToPPTApp:
         )
 
         # Separator
-        ttk.Separator(frame, orient='horizontal').grid(row=3, column=0, columnspan=3, sticky='ew', pady=10)
+        ttk.Separator(frame, orient='horizontal').grid(row=3, column=0, columnspan=3, sticky='ew', pady=5)
 
         # Excel export checkbox
         self.excel_checkbox = tk.Checkbutton(
@@ -104,7 +104,7 @@ class WordToPPTApp:
         self.sheet_combo.grid(row=6, column=1, sticky=tk.W, padx=10)
 
         # Separator
-        ttk.Separator(frame, orient='horizontal').grid(row=7, column=0, columnspan=3, sticky='ew', pady=10)
+        ttk.Separator(frame, orient='horizontal').grid(row=7, column=0, columnspan=3, sticky='ew', pady=5)
 
         # Auto-open folder checkbox
         self.auto_open_checkbox = tk.Checkbutton(
@@ -116,9 +116,9 @@ class WordToPPTApp:
         self.auto_open_checkbox.grid(row=8, column=0, columnspan=3, sticky=tk.W, pady=5)
 
         # Progress text
-        tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=5)
-        self.progress_text = tk.Text(self.root, height=4, width=70)
-        self.progress_text.pack(pady=5)
+        tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=3)
+        self.progress_text = tk.Text(self.root, height=3, width=70)
+        self.progress_text.pack(pady=3)
 
         # Convert button
         self.convert_btn = tk.Button(
@@ -129,9 +129,9 @@ class WordToPPTApp:
             fg="white",
             font=("Arial", 12, "bold"),
             width=20,
-            height=2
+            height=1
         )
-        self.convert_btn.pack(pady=20)
+        self.convert_btn.pack(pady=10)
 
     def log(self, message):
         """Add message to progress text"""
