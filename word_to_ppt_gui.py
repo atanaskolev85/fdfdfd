@@ -26,6 +26,9 @@ class WordToPPTApp:
         self.excel_path = ""
         self.excel_sheet_name = tk.StringVar(value="Sheet1")
 
+        # Auto-open folder option
+        self.auto_open_folder = tk.BooleanVar(value=True)
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -99,6 +102,18 @@ class WordToPPTApp:
         )
         self.sheet_combo = ttk.Combobox(frame, textvariable=self.excel_sheet_name, width=28, state=tk.DISABLED)
         self.sheet_combo.grid(row=6, column=1, sticky=tk.W, padx=10)
+
+        # Separator
+        ttk.Separator(frame, orient='horizontal').grid(row=7, column=0, columnspan=3, sticky='ew', pady=10)
+
+        # Auto-open folder checkbox
+        self.auto_open_checkbox = tk.Checkbutton(
+            frame,
+            text="Отваряй папката автоматично след конвертиране",
+            variable=self.auto_open_folder,
+            font=("Arial", 9)
+        )
+        self.auto_open_checkbox.grid(row=8, column=0, columnspan=3, sticky=tk.W, pady=5)
 
         # Progress text
         tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
@@ -248,13 +263,13 @@ class WordToPPTApp:
             self.log(f"✓ Файлът е записан: {output_path}")
 
             # Show success message
-            result = messagebox.showinfo(
+            messagebox.showinfo(
                 "Успех!",
-                f"Конвертирането е успешно!\n\nФайлът е записан в:\n{output_path}\n\nИскаш ли да отвориш папката?",
+                f"Конвертирането е успешно!\n\nФайлът е записан в:\n{output_path}",
             )
 
-            # Open output directory
-            if result:
+            # Open output directory if option is enabled
+            if self.auto_open_folder.get():
                 try:
                     os.startfile(os.path.dirname(output_path))
                 except:
