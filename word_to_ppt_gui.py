@@ -93,12 +93,12 @@ class WordToPPTApp:
         self.excel_btn = tk.Button(frame, text="Избери Excel файл", command=self.select_excel_file, state=tk.DISABLED)
         self.excel_btn.grid(row=5, column=2, padx=5)
 
-        # Sheet name input
-        tk.Label(frame, text="Име на sheet:", font=("Arial", 10)).grid(
+        # Sheet name selection (dropdown)
+        tk.Label(frame, text="Избери sheet:", font=("Arial", 10)).grid(
             row=6, column=0, sticky=tk.W, pady=5
         )
-        self.sheet_entry = tk.Entry(frame, textvariable=self.excel_sheet_name, width=30, state=tk.DISABLED)
-        self.sheet_entry.grid(row=6, column=1, sticky=tk.W, padx=10)
+        self.sheet_combo = ttk.Combobox(frame, textvariable=self.excel_sheet_name, width=28, state=tk.DISABLED)
+        self.sheet_combo.grid(row=6, column=1, sticky=tk.W, padx=10)
 
         # Progress text
         tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
@@ -158,10 +158,10 @@ class WordToPPTApp:
         """Enable/disable Excel export options"""
         if self.excel_export_enabled.get():
             self.excel_btn.config(state=tk.NORMAL)
-            self.sheet_entry.config(state=tk.NORMAL)
+            self.sheet_combo.config(state="readonly")
         else:
             self.excel_btn.config(state=tk.DISABLED)
-            self.sheet_entry.config(state=tk.DISABLED)
+            self.sheet_combo.config(state=tk.DISABLED)
 
     def select_excel_file(self):
         """Select Excel file"""
@@ -173,6 +173,25 @@ class WordToPPTApp:
             self.excel_path = filepath
             self.excel_label.config(text=os.path.basename(filepath), fg="blue")
             self.log(f"Избран Excel файл: {os.path.basename(filepath)}")
+
+            # Load sheet names from Excel file
+            try:
+                from openpyxl import load_workbook
+                wb = load_workbook(filepath, read_only=True)
+                sheet_names = wb.sheetnames
+                wb.close()
+
+                # Update combobox with sheet names
+                self.sheet_combo['values'] = sheet_names
+
+                # Select first sheet by default
+                if sheet_names:
+                    self.excel_sheet_name.set(sheet_names[0])
+                    self.log(f"  Намерени {len(sheet_names)} sheets: {', '.join(sheet_names)}")
+
+            except Exception as e:
+                self.log(f"  Грешка при зареждане на sheets: {e}")
+                messagebox.showwarning("Внимание", f"Не успях да заредя sheet имената:\n{e}")
 
     def convert(self):
         """Perform conversion"""
