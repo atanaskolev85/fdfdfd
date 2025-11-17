@@ -652,7 +652,7 @@ class WordToPPTConverter:
             # Write data to columns
             ws[f'B{next_row}'] = "Forecast"
             ws[f'C{next_row}'] = "OG"
-            ws[f'E{next_row}'] = f"{project_name} {se_inventory}"
+            ws[f'E{next_row}'] = f"{project_name} Inv_Nu_{se_inventory}"
             ws[f'F{next_row}'] = "Tool"
             ws[f'G{next_row}'] = "Atanas Kolev"
             ws[f'H{next_row}'] = "Fernando Palmero"
@@ -661,7 +661,7 @@ class WordToPPTConverter:
             # Save workbook
             wb.save(self.excel_path)
             print(f"  ✓ Data exported to row {next_row}")
-            print(f"  ✓ Project: {project_name} {se_inventory}")
+            print(f"  ✓ Project: {project_name} Inv_Nu_{se_inventory}")
             print(f"  ✓ Cost: {cost_value}k€")
 
         except Exception as e:
