@@ -35,13 +35,16 @@ class WordToPPTConverter:
                     root = ET.fromstring(xml_content)
 
                     print("  Reading data from Document Properties (customXml)...")
+                    print(f"  DEBUG: Found {len(list(root))} parent elements in XML")
 
                     # Extract all properties (they are children of root elements)
+                    found_tags = []
                     for parent in root:
                         for elem in parent:
                             tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
                             value = elem.text.strip() if elem.text else None
 
+                            found_tags.append(tag)
                             if value:
                                 # Map XML tags to our data dictionary
                                 if tag == 'Plantowner':
@@ -93,6 +96,10 @@ class WordToPPTConverter:
                                     if 'descriptions' not in self.data:
                                         self.data['descriptions'] = []
                                     self.data['descriptions'].append(value)
+
+                    # Debug: Show what was found
+                    print(f"  DEBUG: Found {len(found_tags)} XML tags: {', '.join(set(found_tags[:20]))}")
+                    print(f"  DEBUG: Extracted data keys: {list(self.data.keys())}")
 
                 except KeyError:
                     print("  Note: customXml/item3.xml not found, using legacy table extraction...")
@@ -232,7 +239,17 @@ class WordToPPTConverter:
 
         print(f"\nExtracted data summary:")
         for key, value in self.data.items():
-            print(f"  {key}: {value}")
+            if isinstance(value, list):
+                print(f"  {key}: {len(value)} items")
+            else:
+                print(f"  {key}: {value}")
+
+        # Check for missing critical data
+        critical_fields = ['project_number', 'part_name', 'reference', 'se_inventory_number',
+                          'general_condition', 'type_of_service', 'total_cost', 'approval_date']
+        missing = [f for f in critical_fields if f not in self.data or not self.data[f]]
+        if missing:
+            print(f"\n  ⚠ WARNING: Missing critical data: {', '.join(missing)}")
 
         return self.data
 
