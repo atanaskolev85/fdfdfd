@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Generated PowerPoint output files (keep template)
+# Template is already tracked: Project 742_051.pptx
+Project *_*.pptx
+!Project 742_051.pptx
