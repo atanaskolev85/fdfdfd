@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Word to PowerPoint Converter - GUI Application
+Simple graphical interface for converting Word documents to PowerPoint
+"""
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+import os
+from word_to_ppt_converter import WordToPPTConverter
+
+
+class WordToPPTApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Word to PowerPoint Converter")
+        self.root.geometry("600x400")
+
+        # Default template path
+        self.template_path = "Project 742_051.pptx"
+        self.word_path = ""
+        self.output_dir = ""
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Title
+        title_label = tk.Label(
+            self.root,
+            text="Word to PowerPoint Converter",
+            font=("Arial", 16, "bold")
+        )
+        title_label.pack(pady=20)
+
+        # Frame for file selections
+        frame = tk.Frame(self.root)
+        frame.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
+
+        # Word file selection
+        tk.Label(frame, text="Word Document:", font=("Arial", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, pady=5
+        )
+        self.word_label = tk.Label(frame, text="Не е избран файл", fg="gray")
+        self.word_label.grid(row=0, column=1, sticky=tk.W, padx=10)
+        tk.Button(frame, text="Избери Word файл", command=self.select_word_file).grid(
+            row=0, column=2, padx=5
+        )
+
+        # Template selection
+        tk.Label(frame, text="PowerPoint Бланка:", font=("Arial", 10, "bold")).grid(
+            row=1, column=0, sticky=tk.W, pady=5
+        )
+        self.template_label = tk.Label(frame, text=self.template_path, fg="blue")
+        self.template_label.grid(row=1, column=1, sticky=tk.W, padx=10)
+        tk.Button(frame, text="Промени бланка", command=self.select_template).grid(
+            row=1, column=2, padx=5
+        )
+
+        # Output directory
+        tk.Label(frame, text="Запази в:", font=("Arial", 10, "bold")).grid(
+            row=2, column=0, sticky=tk.W, pady=5
+        )
+        self.output_label = tk.Label(frame, text="Същата папка като Word файла", fg="gray")
+        self.output_label.grid(row=2, column=1, sticky=tk.W, padx=10)
+        tk.Button(frame, text="Избери папка", command=self.select_output_dir).grid(
+            row=2, column=2, padx=5
+        )
+
+        # Progress text
+        tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
+        self.progress_text = tk.Text(self.root, height=6, width=70)
+        self.progress_text.pack(pady=5)
+
+        # Convert button
+        self.convert_btn = tk.Button(
+            self.root,
+            text="Конвертирай",
+            command=self.convert,
+            bg="#4CAF50",
+            fg="white",
+            font=("Arial", 12, "bold"),
+            width=20,
+            height=2
+        )
+        self.convert_btn.pack(pady=20)
+
+    def log(self, message):
+        """Add message to progress text"""
+        self.progress_text.insert(tk.END, message + "\n")
+        self.progress_text.see(tk.END)
+        self.root.update()
+
+    def select_word_file(self):
+        """Select Word document"""
+        filepath = filedialog.askopenfilename(
+            title="Избери Word документ",
+            filetypes=[("Word Documents", "*.docx"), ("All files", "*.*")]
+        )
+        if filepath:
+            self.word_path = filepath
+            self.word_label.config(text=os.path.basename(filepath), fg="blue")
+            self.log(f"Избран Word файл: {os.path.basename(filepath)}")
+
+    def select_template(self):
+        """Select PowerPoint template"""
+        filepath = filedialog.askopenfilename(
+            title="Избери PowerPoint бланка",
+            filetypes=[("PowerPoint", "*.pptx"), ("All files", "*.*")]
+        )
+        if filepath:
+            self.template_path = filepath
+            self.template_label.config(text=os.path.basename(filepath))
+            self.log(f"Избрана бланка: {os.path.basename(filepath)}")
+
+    def select_output_dir(self):
+        """Select output directory"""
+        dirpath = filedialog.askdirectory(title="Избери папка за запис")
+        if dirpath:
+            self.output_dir = dirpath
+            self.output_label.config(text=dirpath, fg="blue")
+            self.log(f"Папка за запис: {dirpath}")
+
+    def convert(self):
+        """Perform conversion"""
+        # Validate inputs
+        if not self.word_path:
+            messagebox.showerror("Грешка", "Моля избери Word документ!")
+            return
+
+        if not os.path.exists(self.template_path):
+            messagebox.showerror("Грешка", f"PowerPoint бланката не съществува:\n{self.template_path}")
+            return
+
+        # Clear progress
+        self.progress_text.delete(1.0, tk.END)
+        self.log("Започване на конвертиране...")
+
+        try:
+            # Create converter
+            converter = WordToPPTConverter(self.word_path, self.template_path)
+
+            # Extract data
+            self.log("Четене на Word документ...")
+            data = converter.extract_word_data()
+
+            # Show extracted data
+            self.log("\nИзвлечени данни:")
+            for key, value in data.items():
+                self.log(f"  {key}: {value}")
+
+            # Determine output directory
+            output_dir = self.output_dir if self.output_dir else None
+
+            # Convert
+            self.log("\nОбновяване на PowerPoint...")
+            output_path = converter.convert(output_dir)
+
+            # Success
+            self.log("\n✓ Готово!")
+            self.log(f"✓ Файлът е записан: {output_path}")
+
+            # Show success message
+            result = messagebox.showinfo(
+                "Успех!",
+                f"Конвертирането е успешно!\n\nФайлът е записан в:\n{output_path}\n\nИскаш ли да отвориш папката?",
+            )
+
+            # Open output directory
+            if result:
+                try:
+                    os.startfile(os.path.dirname(output_path))
+                except:
+                    pass
+
+        except Exception as e:
+            self.log(f"\n✗ Грешка: {str(e)}")
+            messagebox.showerror("Грешка", f"Грешка при конвертиране:\n\n{str(e)}")
+
+
+def main():
+    root = tk.Tk()
+    app = WordToPPTApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
