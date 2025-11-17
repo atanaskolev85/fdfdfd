@@ -22,10 +22,31 @@ class WordToPPTConverter:
         self.excel_path = None
         self.excel_sheet_name = None
 
+        # Email settings
+        self.email_enabled = False
+        self.email_recipients = []
+        self.email_subject = ""
+        self.email_body = ""
+        self.email_smtp_server = ""
+        self.email_smtp_port = 587
+        self.email_username = ""
+        self.email_password = ""
+
     def set_excel_export(self, excel_path, sheet_name):
         """Enable Excel export with specified file and sheet"""
         self.excel_path = excel_path
         self.excel_sheet_name = sheet_name
+
+    def set_email_config(self, recipients, subject, body, smtp_server, smtp_port, username, password):
+        """Enable email sending with specified configuration"""
+        self.email_enabled = True
+        self.email_recipients = recipients if isinstance(recipients, list) else [r.strip() for r in recipients.split(',')]
+        self.email_subject = subject
+        self.email_body = body
+        self.email_smtp_server = smtp_server
+        self.email_smtp_port = smtp_port
+        self.email_username = username
+        self.email_password = password
 
     def extract_word_data(self):
         """Extract data from Word document"""
@@ -667,6 +688,55 @@ class WordToPPTConverter:
         except Exception as e:
             print(f"  ✗ Excel export failed: {e}")
 
+    def send_email(self, ppt_file_path):
+        """Send email with PowerPoint attachment"""
+        if not self.email_enabled:
+            return
+
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.base import MIMEBase
+            from email.mime.text import MIMEText
+            from email import encoders
+
+            print(f"\nSending email...")
+            print(f"  To: {', '.join(self.email_recipients)}")
+            print(f"  Subject: {self.email_subject}")
+
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = self.email_username
+            msg['To'] = ', '.join(self.email_recipients)
+            msg['Subject'] = self.email_subject
+
+            # Add body
+            msg.attach(MIMEText(self.email_body, 'plain'))
+
+            # Attach PowerPoint file
+            with open(ppt_file_path, 'rb') as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename= {os.path.basename(ppt_file_path)}'
+                )
+                msg.attach(part)
+
+            # Send email
+            server = smtplib.SMTP(self.email_smtp_server, self.email_smtp_port)
+            server.starttls()
+            server.login(self.email_username, self.email_password)
+            text = msg.as_string()
+            server.sendmail(self.email_username, self.email_recipients, text)
+            server.quit()
+
+            print(f"  ✓ Email sent successfully to {len(self.email_recipients)} recipient(s)")
+
+        except Exception as e:
+            print(f"  ✗ Email sending failed: {e}")
+
     def convert(self, output_dir=None):
         """Main conversion method"""
         # Extract data from Word
@@ -686,6 +756,10 @@ class WordToPPTConverter:
         # Export to Excel if enabled
         if self.excel_path:
             self.export_to_excel()
+
+        # Send email if enabled
+        if self.email_enabled:
+            self.send_email(output_path)
 
         return output_path
 
