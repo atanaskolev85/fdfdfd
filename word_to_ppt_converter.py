@@ -262,8 +262,12 @@ class WordToPPTConverter:
                 text = shape.text_frame.text
 
                 if "Key Intent" in text:
+                    from pptx.util import Pt
+                    from pptx.enum.text import PP_ALIGN
+                    from pptx.dml.color import RGBColor
+
                     # Build new Key Intent content
-                    new_lines = ["Key Intent", ""]
+                    new_lines = []
 
                     if 'part_name' in self.data:
                         new_lines.append(f"Name of the part: {self.data['part_name']}")
@@ -277,42 +281,39 @@ class WordToPPTConverter:
                     if 'general_condition' in self.data:
                         new_lines.append(f"General state of the mold: {self.data['general_condition']}")
 
-                    # Clear existing paragraphs and add new ones
-                    # Keep first paragraph (Key Intent title) formatting
-                    first_para_format = None
-                    if len(shape.text_frame.paragraphs) > 0:
-                        first_para = shape.text_frame.paragraphs[0]
-                        if len(first_para.runs) > 0:
-                            first_para_format = first_para.runs[0].font
-
-                    # Clear all but first paragraph
-                    for _ in range(len(shape.text_frame.paragraphs) - 1):
+                    # Clear all paragraphs except first (title)
+                    while len(shape.text_frame.paragraphs) > 1:
                         try:
                             p = shape.text_frame.paragraphs[-1]
                             p._element.getparent().remove(p._element)
                         except:
-                            pass
+                            break
 
-                    # Update first paragraph
-                    if shape.text_frame.paragraphs:
-                        shape.text_frame.paragraphs[0].text = new_lines[0]
+                    # Add empty line after title
+                    p = shape.text_frame.add_paragraph()
+                    p.text = ""
 
-                    # Add remaining lines
-                    from pptx.util import Pt
-                    for line in new_lines[1:]:
+                    # Add data lines as bullets
+                    for line in new_lines:
                         p = shape.text_frame.add_paragraph()
-                        p.text = line
                         p.level = 0
+                        run = p.add_run()
+                        run.text = line
+                        run.font.size = Pt(14)
 
-                    print(f"  ✓ Updated Key Intent section with {len(new_lines)} lines")
+                    print(f"  ✓ Updated Key Intent section with {len(new_lines)} items (14pt, bullets)")
+                    break
 
         # Update Techno overview section
         for shape in slide.shapes:
             if hasattr(shape, "text_frame"):
-                text = shape.text_frame.text
+                text = shape.text_frame.text.strip()
 
-                # Find the bullet list under "Techno overview"
-                if "Topic: Capacity" in text or ("Improving old tools" in text):
+                # Find the shape with "Techno overview" title
+                if text == "Techno overview":
+                    from pptx.util import Pt
+                    from pptx.dml.color import RGBColor
+
                     # Build new techno overview content
                     new_lines = []
 
@@ -323,24 +324,28 @@ class WordToPPTConverter:
                     if 'descriptions' in self.data and self.data['descriptions']:
                         new_lines.extend(self.data['descriptions'])
 
-                    # Clear paragraphs and rebuild
-                    for _ in range(len(shape.text_frame.paragraphs)):
+                    # Clear all paragraphs except first (title)
+                    while len(shape.text_frame.paragraphs) > 1:
                         try:
                             p = shape.text_frame.paragraphs[-1]
                             p._element.getparent().remove(p._element)
                         except:
-                            pass
+                            break
 
-                    # Add new lines
-                    for i, line in enumerate(new_lines):
-                        if i == 0:
-                            p = shape.text_frame.paragraphs[0] if shape.text_frame.paragraphs else shape.text_frame.add_paragraph()
-                        else:
-                            p = shape.text_frame.add_paragraph()
-                        p.text = line
+                    # Add empty line after title
+                    p = shape.text_frame.add_paragraph()
+                    p.text = ""
+
+                    # Add new lines as bullets
+                    for line in new_lines:
+                        p = shape.text_frame.add_paragraph()
                         p.level = 0
+                        run = p.add_run()
+                        run.text = line
+                        run.font.size = Pt(14)
+                        run.font.color.rgb = RGBColor(255, 255, 255)  # White
 
-                    print(f"  ✓ Updated Techno overview with {len(new_lines)} items")
+                    print(f"  ✓ Updated Techno overview with {len(new_lines)} items (14pt, white, bullets)")
                     break
 
         # Update Finance table
@@ -367,10 +372,14 @@ class WordToPPTConverter:
                                     original_run_format = original_para.runs[0].font
 
                                 # Update Required Capex
+                                from pptx.dml.color import RGBColor
+
                                 table.rows[0].cells[1].text_frame.clear()
                                 p = table.rows[0].cells[1].text_frame.paragraphs[0]
                                 run = p.add_run()
                                 run.text = cost_str
+                                # Set white color explicitly
+                                run.font.color.rgb = RGBColor(255, 255, 255)
                                 if original_run_format:
                                     if original_run_format.name:
                                         run.font.name = original_run_format.name
@@ -378,12 +387,6 @@ class WordToPPTConverter:
                                         run.font.size = original_run_format.size
                                     if original_run_format.bold:
                                         run.font.bold = original_run_format.bold
-                                    # Copy color if possible
-                                    try:
-                                        if hasattr(original_run_format.color, 'rgb') and original_run_format.color.rgb:
-                                            run.font.color.rgb = original_run_format.color.rgb
-                                    except:
-                                        pass
 
                                 # Clear Required Opex
                                 table.rows[1].cells[1].text_frame.text = ""
@@ -393,6 +396,8 @@ class WordToPPTConverter:
                                 p = table.rows[2].cells[1].text_frame.paragraphs[0]
                                 run = p.add_run()
                                 run.text = cost_str
+                                # Set white color explicitly
+                                run.font.color.rgb = RGBColor(255, 255, 255)
                                 if original_run_format:
                                     if original_run_format.name:
                                         run.font.name = original_run_format.name
@@ -400,11 +405,6 @@ class WordToPPTConverter:
                                         run.font.size = original_run_format.size
                                     if original_run_format.bold:
                                         run.font.bold = original_run_format.bold
-                                    try:
-                                        if hasattr(original_run_format.color, 'rgb') and original_run_format.color.rgb:
-                                            run.font.color.rgb = original_run_format.color.rgb
-                                    except:
-                                        pass
 
                                 print(f"  ✓ Updated Finance table: {cost} → {cost_str}")
                 except Exception as e:
@@ -485,18 +485,39 @@ class WordToPPTConverter:
 
                 collect_boxes(group_shape)
 
+                from pptx.util import Pt
+                from pptx.dml.color import RGBColor
+
                 # Update first 3 dates with approval date
                 if approval_date_str:
                     for i in range(min(3, len(date_boxes))):
-                        date_boxes[i].text_frame.text = approval_date_str
+                        shape = date_boxes[i]
+                        shape.text_frame.clear()
+                        p = shape.text_frame.paragraphs[0]
+                        run = p.add_run()
+                        run.text = approval_date_str
+                        run.font.size = Pt(10)
+                        run.font.color.rgb = RGBColor(255, 255, 255)  # White
 
                 # Update 4th date with finish date
                 if finish_date_str and len(date_boxes) >= 4:
-                    date_boxes[3].text_frame.text = finish_date_str
+                    shape = date_boxes[3]
+                    shape.text_frame.clear()
+                    p = shape.text_frame.paragraphs[0]
+                    run = p.add_run()
+                    run.text = finish_date_str
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(255, 255, 255)  # White
 
                 # Update 5th date with finish +2 months
                 if finish_plus_2_str and len(date_boxes) >= 5:
-                    date_boxes[4].text_frame.text = finish_plus_2_str
+                    shape = date_boxes[4]
+                    shape.text_frame.clear()
+                    p = shape.text_frame.paragraphs[0]
+                    run = p.add_run()
+                    run.text = finish_plus_2_str
+                    run.font.size = Pt(10)
+                    run.font.color.rgb = RGBColor(255, 255, 255)  # White
 
                 if date_boxes:
                     print(f"  ✓ Updated {len(date_boxes)} dates in Initial Planning")
