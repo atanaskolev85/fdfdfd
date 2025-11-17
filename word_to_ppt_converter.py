@@ -36,56 +36,57 @@ class WordToPPTConverter:
 
                     print("  Reading data from Document Properties (customXml)...")
 
-                    # Extract all properties
-                    for elem in root:
-                        tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                        value = elem.text.strip() if elem.text else None
+                    # Extract all properties (they are children of root elements)
+                    for parent in root:
+                        for elem in parent:
+                            tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                            value = elem.text.strip() if elem.text else None
 
-                        if value:
-                            # Map XML tags to our data dictionary
-                            if tag == 'Plantowner':
-                                self.data['plant_owner'] = value
-                                print(f"  ✓ Plant owner: {value}")
-                            elif tag == 'Sitename':
-                                self.data['plant_code'] = value
-                                print(f"  ✓ Plant code: {value}")
-                            elif tag == 'Nameofthepart':
-                                self.data['part_name'] = value
-                                print(f"  ✓ Part name: {value}")
-                            elif tag == 'Ref_':
-                                self.data['reference'] = value.replace('\n', ' ')
-                                print(f"  ✓ Reference: {value[:30]}...")
-                            elif 'Toolnumber' in tag:
-                                self.data['tool_number'] = value
-                                print(f"  ✓ Tool number: {value}")
-                            elif tag == 'SEinventorynumber':
-                                self.data['se_inventory_number'] = value
-                                print(f"  ✓ SE inventory: {value}")
-                            elif tag == 'Inventory_number_Gormar':
-                                self.data['gotmar_inventory'] = value
-                            elif tag == 'GeneralToolCondition':
-                                self.data['general_condition'] = value
-                                print(f"  ✓ General condition: {value}")
-                            elif tag == 'Typeofservice':
-                                self.data['type_of_service'] = value
-                                print(f"  ✓ Type of service: {value}")
-                            elif tag == 'Creationdate':
-                                self.data['project_creation_date'] = value
-                            elif tag == 'Offercreationdate':
-                                self.data['offer_creation_date'] = value
-                            elif tag == 'Approvaldate':
-                                self.data['approval_date'] = value
-                                print(f"  ✓ Approval date: {value}")
-                            elif tag == 'Finishoftheproject':
-                                self.data['finish_estimated'] = value
-                                print(f"  ✓ Finish date: {value}")
-                            elif tag == 'Totalcost':
-                                self.data['total_cost'] = value
-                                print(f"  ✓ Total cost: {value}")
-                            elif tag == 'ProjectStatus':
-                                self.data['project_status'] = value
-                            elif tag == 'PRIORITY':
-                                self.data['priority'] = value
+                            if value:
+                                # Map XML tags to our data dictionary
+                                if tag == 'Plantowner':
+                                    self.data['plant_owner'] = value
+                                    print(f"  ✓ Plant owner: {value}")
+                                elif tag == 'Sitename':
+                                    self.data['plant_code'] = value
+                                    print(f"  ✓ Plant code: {value}")
+                                elif tag == 'Nameofthepart':
+                                    self.data['part_name'] = value
+                                    print(f"  ✓ Part name: {value}")
+                                elif tag == 'Ref_':
+                                    self.data['reference'] = value.replace('\n', ' ')
+                                    print(f"  ✓ Reference: {value[:30]}...")
+                                elif 'Toolnumber' in tag:
+                                    self.data['tool_number'] = value
+                                    print(f"  ✓ Tool number: {value}")
+                                elif tag == 'SEinventorynumber':
+                                    self.data['se_inventory_number'] = value
+                                    print(f"  ✓ SE inventory: {value}")
+                                elif tag == 'Inventory_number_Gormar':
+                                    self.data['gotmar_inventory'] = value
+                                elif tag == 'GeneralToolCondition':
+                                    self.data['general_condition'] = value
+                                    print(f"  ✓ General condition: {value}")
+                                elif tag == 'Typeofservice':
+                                    self.data['type_of_service'] = value
+                                    print(f"  ✓ Type of service: {value}")
+                                elif tag == 'Creationdate':
+                                    self.data['project_creation_date'] = value
+                                elif tag == 'Offercreationdate':
+                                    self.data['offer_creation_date'] = value
+                                elif tag == 'Approvaldate':
+                                    self.data['approval_date'] = value
+                                    print(f"  ✓ Approval date: {value}")
+                                elif tag == 'Finishoftheproject':
+                                    self.data['finish_estimated'] = value
+                                    print(f"  ✓ Finish date: {value}")
+                                elif tag == 'Totalcost':
+                                    self.data['total_cost'] = value
+                                    print(f"  ✓ Total cost: {value}")
+                                elif tag == 'ProjectStatus':
+                                    self.data['project_status'] = value
+                                elif tag == 'PRIORITY':
+                                    self.data['priority'] = value
 
                 except KeyError:
                     print("  Note: customXml/item3.xml not found, using legacy table extraction...")
