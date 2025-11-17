@@ -294,12 +294,27 @@ class WordToPPTConverter:
                     p.text = ""
 
                     # Add data lines as bullets
+                    from lxml import etree
+
                     for line in new_lines:
                         p = shape.text_frame.add_paragraph()
                         p.level = 0
                         run = p.add_run()
                         run.text = line
                         run.font.size = Pt(14)
+
+                        # Add bullet formatting
+                        pPr = p._element.get_or_add_pPr()
+                        # Set margins and indent for bullet
+                        pPr.set('marL', '171450')
+                        pPr.set('indent', '-171450')
+                        # Add bullet color (same as text)
+                        etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buClrTx')
+                        # Add bullet size (same as text)
+                        etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buSzTx')
+                        # Add bullet character '•'
+                        buChar = etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buChar')
+                        buChar.set('char', '•')
 
                     print(f"  ✓ Updated Key Intent section with {len(new_lines)} items (14pt, bullets)")
                     break
@@ -337,6 +352,8 @@ class WordToPPTConverter:
                     p.text = ""
 
                     # Add new lines as bullets
+                    from lxml import etree
+
                     for line in new_lines:
                         p = shape.text_frame.add_paragraph()
                         p.level = 0
@@ -344,6 +361,19 @@ class WordToPPTConverter:
                         run.text = line
                         run.font.size = Pt(14)
                         run.font.color.rgb = RGBColor(255, 255, 255)  # White
+
+                        # Add bullet formatting
+                        pPr = p._element.get_or_add_pPr()
+                        # Set margins and indent for bullet
+                        pPr.set('marL', '171450')
+                        pPr.set('indent', '-171450')
+                        # Add bullet color (same as text)
+                        etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buClrTx')
+                        # Add bullet size (same as text)
+                        etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buSzTx')
+                        # Add bullet character '•'
+                        buChar = etree.SubElement(pPr, '{http://schemas.openxmlformats.org/drawingml/2006/main}buChar')
+                        buChar.set('char', '•')
 
                     print(f"  ✓ Updated Techno overview with {len(new_lines)} items (14pt, white, bullets)")
                     break
