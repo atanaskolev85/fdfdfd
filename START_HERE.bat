@@ -25,12 +25,22 @@ if errorlevel 1 (
 
 REM Проверка за необходимите библиотеки
 echo Проверка на библиотеките...
-python -c "import docx, pptx" >nul 2>&1
+python -c "import docx, pptx, dateutil" >nul 2>&1
 if errorlevel 1 (
     echo.
     echo Инсталиране на необходими библиотеки...
     echo.
     pip install -r requirements.txt
+    if errorlevel 1 (
+        echo.
+        echo ГРЕШКА: Не успях да инсталирам библиотеките!
+        echo Моля опитай ръчно: pip install -r requirements.txt
+        echo.
+        pause
+        exit /b 1
+    )
+    echo.
+    echo Библиотеките са инсталирани успешно!
     echo.
 )
 

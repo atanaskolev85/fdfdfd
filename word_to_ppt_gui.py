@@ -139,21 +139,16 @@ class WordToPPTApp:
             # Create converter
             converter = WordToPPTConverter(self.word_path, self.template_path)
 
-            # Extract data
-            self.log("Четене на Word документ...")
-            data = converter.extract_word_data()
-
-            # Show extracted data
-            self.log("\nИзвлечени данни:")
-            for key, value in data.items():
-                self.log(f"  {key}: {value}")
-
             # Determine output directory
             output_dir = self.output_dir if self.output_dir else None
 
-            # Convert
-            self.log("\nОбновяване на PowerPoint...")
+            # Convert (this will extract data and update PowerPoint)
             output_path = converter.convert(output_dir)
+
+            # Show extracted data after conversion
+            self.log("\nИзвлечени данни:")
+            for key, value in converter.data.items():
+                self.log(f"  {key}: {value}")
 
             # Success
             self.log("\n✓ Готово!")
