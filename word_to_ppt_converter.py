@@ -18,6 +18,15 @@ class WordToPPTConverter:
         self.ppt_template_path = ppt_template_path
         self.data = {}
 
+        # Excel export settings
+        self.excel_path = None
+        self.excel_sheet_name = None
+
+    def set_excel_export(self, excel_path, sheet_name):
+        """Enable Excel export with specified file and sheet"""
+        self.excel_path = excel_path
+        self.excel_sheet_name = sheet_name
+
     def extract_word_data(self):
         """Extract data from Word document"""
         print(f"Reading Word document: {self.word_path}")
@@ -602,6 +611,62 @@ class WordToPPTConverter:
         prs.save(output_path)
         print(f"\nSaved updated PowerPoint to: {output_path}")
 
+    def export_to_excel(self):
+        """Export data to Excel file"""
+        if not self.excel_path or not self.excel_sheet_name:
+            return
+
+        try:
+            from openpyxl import load_workbook
+            print(f"\nExporting to Excel: {self.excel_path}")
+            print(f"  Sheet: {self.excel_sheet_name}")
+
+            # Load workbook
+            wb = load_workbook(self.excel_path)
+
+            # Get or create sheet
+            if self.excel_sheet_name in wb.sheetnames:
+                ws = wb[self.excel_sheet_name]
+            else:
+                ws = wb.create_sheet(self.excel_sheet_name)
+                print(f"  Created new sheet: {self.excel_sheet_name}")
+
+            # Find next empty row
+            next_row = ws.max_row + 1
+
+            # Prepare data
+            project_name = f"Project {self.data.get('project_number', 'XXX_XXX')}"
+            se_inventory = self.data.get('se_inventory_number', '')
+
+            # Calculate cost in k format without "k€"
+            cost_value = ""
+            if 'total_cost' in self.data:
+                try:
+                    cost = float(self.data['total_cost'])
+                    cost_with_markup = cost * 1.1
+                    cost_in_k = cost_with_markup / 1000
+                    cost_value = f"{cost_in_k:.1f}"
+                except:
+                    pass
+
+            # Write data to columns
+            ws[f'B{next_row}'] = "Forecast"
+            ws[f'C{next_row}'] = "OG"
+            ws[f'E{next_row}'] = f"{project_name} {se_inventory}"
+            ws[f'F{next_row}'] = "Tool"
+            ws[f'G{next_row}'] = "Atanas Kolev"
+            ws[f'H{next_row}'] = "Fernando Palmero"
+            ws[f'K{next_row}'] = cost_value
+
+            # Save workbook
+            wb.save(self.excel_path)
+            print(f"  ✓ Data exported to row {next_row}")
+            print(f"  ✓ Project: {project_name} {se_inventory}")
+            print(f"  ✓ Cost: {cost_value}k€")
+
+        except Exception as e:
+            print(f"  ✗ Excel export failed: {e}")
+
     def convert(self, output_dir=None):
         """Main conversion method"""
         # Extract data from Word
@@ -617,6 +682,10 @@ class WordToPPTConverter:
 
         # Update PowerPoint
         self.update_powerpoint(output_path)
+
+        # Export to Excel if enabled
+        if self.excel_path:
+            self.export_to_excel()
 
         return output_path
 

@@ -14,12 +14,17 @@ class WordToPPTApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Word to PowerPoint Converter")
-        self.root.geometry("600x400")
+        self.root.geometry("700x600")
 
         # Default template path
         self.template_path = "Project 742_051.pptx"
         self.word_path = ""
         self.output_dir = ""
+
+        # Excel export options
+        self.excel_export_enabled = tk.BooleanVar(value=False)
+        self.excel_path = ""
+        self.excel_sheet_name = tk.StringVar(value="Sheet1")
 
         self.create_widgets()
 
@@ -30,7 +35,7 @@ class WordToPPTApp:
             text="Word to PowerPoint Converter",
             font=("Arial", 16, "bold")
         )
-        title_label.pack(pady=20)
+        title_label.pack(pady=10)
 
         # Frame for file selections
         frame = tk.Frame(self.root)
@@ -65,6 +70,35 @@ class WordToPPTApp:
         tk.Button(frame, text="Избери папка", command=self.select_output_dir).grid(
             row=2, column=2, padx=5
         )
+
+        # Separator
+        ttk.Separator(frame, orient='horizontal').grid(row=3, column=0, columnspan=3, sticky='ew', pady=10)
+
+        # Excel export checkbox
+        self.excel_checkbox = tk.Checkbutton(
+            frame,
+            text="Експортирай данни в Excel файл",
+            variable=self.excel_export_enabled,
+            font=("Arial", 10, "bold"),
+            command=self.toggle_excel_options
+        )
+        self.excel_checkbox.grid(row=4, column=0, columnspan=3, sticky=tk.W, pady=5)
+
+        # Excel file selection
+        tk.Label(frame, text="Excel файл:", font=("Arial", 10)).grid(
+            row=5, column=0, sticky=tk.W, pady=5
+        )
+        self.excel_label = tk.Label(frame, text="Не е избран файл", fg="gray")
+        self.excel_label.grid(row=5, column=1, sticky=tk.W, padx=10)
+        self.excel_btn = tk.Button(frame, text="Избери Excel файл", command=self.select_excel_file, state=tk.DISABLED)
+        self.excel_btn.grid(row=5, column=2, padx=5)
+
+        # Sheet name input
+        tk.Label(frame, text="Име на sheet:", font=("Arial", 10)).grid(
+            row=6, column=0, sticky=tk.W, pady=5
+        )
+        self.sheet_entry = tk.Entry(frame, textvariable=self.excel_sheet_name, width=30, state=tk.DISABLED)
+        self.sheet_entry.grid(row=6, column=1, sticky=tk.W, padx=10)
 
         # Progress text
         tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
@@ -120,6 +154,26 @@ class WordToPPTApp:
             self.output_label.config(text=dirpath, fg="blue")
             self.log(f"Папка за запис: {dirpath}")
 
+    def toggle_excel_options(self):
+        """Enable/disable Excel export options"""
+        if self.excel_export_enabled.get():
+            self.excel_btn.config(state=tk.NORMAL)
+            self.sheet_entry.config(state=tk.NORMAL)
+        else:
+            self.excel_btn.config(state=tk.DISABLED)
+            self.sheet_entry.config(state=tk.DISABLED)
+
+    def select_excel_file(self):
+        """Select Excel file"""
+        filepath = filedialog.askopenfilename(
+            title="Избери Excel файл",
+            filetypes=[("Excel Files", "*.xlsx"), ("All files", "*.*")]
+        )
+        if filepath:
+            self.excel_path = filepath
+            self.excel_label.config(text=os.path.basename(filepath), fg="blue")
+            self.log(f"Избран Excel файл: {os.path.basename(filepath)}")
+
     def convert(self):
         """Perform conversion"""
         # Validate inputs
@@ -131,6 +185,18 @@ class WordToPPTApp:
             messagebox.showerror("Грешка", f"PowerPoint бланката не съществува:\n{self.template_path}")
             return
 
+        # Validate Excel export if enabled
+        if self.excel_export_enabled.get():
+            if not self.excel_path:
+                messagebox.showerror("Грешка", "Моля избери Excel файл за експорт!")
+                return
+            if not os.path.exists(self.excel_path):
+                messagebox.showerror("Грешка", f"Excel файлът не съществува:\n{self.excel_path}")
+                return
+            if not self.excel_sheet_name.get():
+                messagebox.showerror("Грешка", "Моля въведи име на sheet!")
+                return
+
         # Clear progress
         self.progress_text.delete(1.0, tk.END)
         self.log("Започване на конвертиране...")
@@ -141,6 +207,14 @@ class WordToPPTApp:
 
             # Determine output directory
             output_dir = self.output_dir if self.output_dir else None
+
+            # Set Excel export options if enabled
+            if self.excel_export_enabled.get():
+                converter.set_excel_export(
+                    self.excel_path,
+                    self.excel_sheet_name.get()
+                )
+                self.log(f"Excel експорт активиран: {os.path.basename(self.excel_path)}")
 
             # Convert (this will extract data and update PowerPoint)
             output_path = converter.convert(output_dir)

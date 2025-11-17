@@ -25,7 +25,7 @@ if errorlevel 1 (
 
 REM Проверка за необходимите библиотеки
 echo Проверка на библиотеките...
-python -c "import docx, pptx, dateutil" >nul 2>&1
+python -c "import docx, pptx, dateutil, openpyxl" >nul 2>&1
 if errorlevel 1 (
     echo.
     echo Инсталиране на необходими библиотеки...
