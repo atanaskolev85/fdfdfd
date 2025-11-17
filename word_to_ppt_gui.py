@@ -116,8 +116,8 @@ class WordToPPTApp:
         self.auto_open_checkbox.grid(row=8, column=0, columnspan=3, sticky=tk.W, pady=5)
 
         # Progress text
-        tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
-        self.progress_text = tk.Text(self.root, height=6, width=70)
+        tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=5)
+        self.progress_text = tk.Text(self.root, height=4, width=70)
         self.progress_text.pack(pady=5)
 
         # Convert button
