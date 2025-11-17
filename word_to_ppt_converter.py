@@ -22,23 +22,10 @@ class WordToPPTConverter:
         self.excel_path = None
         self.excel_sheet_name = None
 
-        # Email settings
-        self.email_enabled = False
-        self.email_recipients = ""
-        self.email_subject = ""
-        self.email_body = ""
-
     def set_excel_export(self, excel_path, sheet_name):
         """Enable Excel export with specified file and sheet"""
         self.excel_path = excel_path
         self.excel_sheet_name = sheet_name
-
-    def set_email_config(self, recipients, subject, body):
-        """Enable email sending with Outlook"""
-        self.email_enabled = True
-        self.email_recipients = recipients
-        self.email_subject = subject
-        self.email_body = body
 
     def extract_word_data(self):
         """Extract data from Word document"""
@@ -680,63 +667,6 @@ class WordToPPTConverter:
         except Exception as e:
             print(f"  ✗ Excel export failed: {e}")
 
-    def send_email(self, ppt_file_path):
-        """Create email draft in Outlook with PowerPoint and Word attachments"""
-        if not self.email_enabled:
-            return
-
-        try:
-            import win32com.client
-
-            print(f"\nCreating Outlook email...")
-            print(f"  To: {self.email_recipients}")
-            print(f"  Subject: {self.email_subject}")
-
-            # Create Outlook application instance
-            outlook = win32com.client.Dispatch('Outlook.Application')
-            mail = outlook.CreateItem(0)  # 0 = MailItem
-
-            # Set recipients
-            mail.To = self.email_recipients
-
-            # Set subject
-            mail.Subject = self.email_subject
-
-            # Set body
-            mail.Body = self.email_body
-
-            # Attach PowerPoint file
-            mail.Attachments.Add(os.path.abspath(ppt_file_path))
-            print(f"  ✓ Attached: {os.path.basename(ppt_file_path)}")
-
-            # Attach Word file
-            mail.Attachments.Add(os.path.abspath(self.word_path))
-            print(f"  ✓ Attached: {os.path.basename(self.word_path)}")
-
-            # Display the email (don't send automatically - user can review)
-            mail.Display()
-
-            print(f"  ✓ Outlook email created successfully!")
-            print(f"  Note: Email is ready for review. Click 'Send' when ready.")
-
-        except ImportError as e:
-            print(f"  ✗ Outlook email creation failed: {e}")
-            print(f"\n  РЕШЕНИЕ:")
-            print(f"  1. Инсталирай pywin32: pip install pywin32")
-            print(f"  2. Стартирай: python Scripts/pywin32_postinstall.py -install")
-            print(f"  3. Рестартирай приложението")
-        except Exception as e:
-            print(f"  ✗ Outlook email creation failed: {e}")
-            print(f"\n  ВЪЗМОЖНИ ПРИЧИНИ:")
-            print(f"  1. Microsoft Outlook не е инсталиран или не е конфигуриран")
-            print(f"  2. Използваш новия Outlook (web-based) вместо класическия Desktop Outlook")
-            print(f"  3. Outlook не е стартиран поне веднъж")
-            print(f"\n  РЕШЕНИЕ за нов Outlook на Windows 11:")
-            print(f"  - Трябва да използваш класическия Outlook (Desktop версия)")
-            print(f"  - Отвори Settings → Apps → Installed Apps")
-            print(f"  - Потърси 'Outlook (classic)' или инсталирай Office Desktop версия")
-            print(f"  - Алтернативно: Използвай файловете ръчно от output папката")
-
     def convert(self, output_dir=None):
         """Main conversion method"""
         # Extract data from Word
@@ -756,10 +686,6 @@ class WordToPPTConverter:
         # Export to Excel if enabled
         if self.excel_path:
             self.export_to_excel()
-
-        # Send email if enabled
-        if self.email_enabled:
-            self.send_email(output_path)
 
         return output_path
 
