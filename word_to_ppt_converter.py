@@ -24,29 +24,21 @@ class WordToPPTConverter:
 
         # Email settings
         self.email_enabled = False
-        self.email_recipients = []
+        self.email_recipients = ""
         self.email_subject = ""
         self.email_body = ""
-        self.email_smtp_server = ""
-        self.email_smtp_port = 587
-        self.email_username = ""
-        self.email_password = ""
 
     def set_excel_export(self, excel_path, sheet_name):
         """Enable Excel export with specified file and sheet"""
         self.excel_path = excel_path
         self.excel_sheet_name = sheet_name
 
-    def set_email_config(self, recipients, subject, body, smtp_server, smtp_port, username, password):
-        """Enable email sending with specified configuration"""
+    def set_email_config(self, recipients, subject, body):
+        """Enable email sending with Outlook"""
         self.email_enabled = True
-        self.email_recipients = recipients if isinstance(recipients, list) else [r.strip() for r in recipients.split(',')]
+        self.email_recipients = recipients
         self.email_subject = subject
         self.email_body = body
-        self.email_smtp_server = smtp_server
-        self.email_smtp_port = smtp_port
-        self.email_username = username
-        self.email_password = password
 
     def extract_word_data(self):
         """Extract data from Word document"""
@@ -689,53 +681,47 @@ class WordToPPTConverter:
             print(f"  ✗ Excel export failed: {e}")
 
     def send_email(self, ppt_file_path):
-        """Send email with PowerPoint attachment"""
+        """Create email draft in Outlook with PowerPoint and Word attachments"""
         if not self.email_enabled:
             return
 
         try:
-            import smtplib
-            from email.mime.multipart import MIMEMultipart
-            from email.mime.base import MIMEBase
-            from email.mime.text import MIMEText
-            from email import encoders
+            import win32com.client
 
-            print(f"\nSending email...")
-            print(f"  To: {', '.join(self.email_recipients)}")
+            print(f"\nCreating Outlook email...")
+            print(f"  To: {self.email_recipients}")
             print(f"  Subject: {self.email_subject}")
 
-            # Create message
-            msg = MIMEMultipart()
-            msg['From'] = self.email_username
-            msg['To'] = ', '.join(self.email_recipients)
-            msg['Subject'] = self.email_subject
+            # Create Outlook application instance
+            outlook = win32com.client.Dispatch('Outlook.Application')
+            mail = outlook.CreateItem(0)  # 0 = MailItem
 
-            # Add body
-            msg.attach(MIMEText(self.email_body, 'plain'))
+            # Set recipients
+            mail.To = self.email_recipients
+
+            # Set subject
+            mail.Subject = self.email_subject
+
+            # Set body
+            mail.Body = self.email_body
 
             # Attach PowerPoint file
-            with open(ppt_file_path, 'rb') as attachment:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header(
-                    'Content-Disposition',
-                    f'attachment; filename= {os.path.basename(ppt_file_path)}'
-                )
-                msg.attach(part)
+            mail.Attachments.Add(os.path.abspath(ppt_file_path))
+            print(f"  ✓ Attached: {os.path.basename(ppt_file_path)}")
 
-            # Send email
-            server = smtplib.SMTP(self.email_smtp_server, self.email_smtp_port)
-            server.starttls()
-            server.login(self.email_username, self.email_password)
-            text = msg.as_string()
-            server.sendmail(self.email_username, self.email_recipients, text)
-            server.quit()
+            # Attach Word file
+            mail.Attachments.Add(os.path.abspath(self.word_path))
+            print(f"  ✓ Attached: {os.path.basename(self.word_path)}")
 
-            print(f"  ✓ Email sent successfully to {len(self.email_recipients)} recipient(s)")
+            # Display the email (don't send automatically - user can review)
+            mail.Display()
+
+            print(f"  ✓ Outlook email created successfully!")
+            print(f"  Note: Email is ready for review. Click 'Send' when ready.")
 
         except Exception as e:
-            print(f"  ✗ Email sending failed: {e}")
+            print(f"  ✗ Outlook email creation failed: {e}")
+            print(f"  Note: Make sure Microsoft Outlook is installed on your system.")
 
     def convert(self, output_dir=None):
         """Main conversion method"""

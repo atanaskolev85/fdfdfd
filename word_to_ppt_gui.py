@@ -14,7 +14,7 @@ class WordToPPTApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Word to PowerPoint Converter")
-        self.root.geometry("850x800")
+        self.root.geometry("800x650")
 
         # Default template path
         self.template_path = "Project 742_051.pptx"
@@ -26,15 +26,11 @@ class WordToPPTApp:
         self.excel_path = ""
         self.excel_sheet_name = tk.StringVar(value="Sheet1")
 
-        # Email options
+        # Email options (Outlook)
         self.email_enabled = tk.BooleanVar(value=False)
         self.email_recipients = tk.StringVar(value="")
         self.email_subject = tk.StringVar(value="")
         self.email_body = tk.StringVar(value="")
-        self.email_smtp_server = tk.StringVar(value="smtp.gmail.com")
-        self.email_smtp_port = tk.IntVar(value=587)
-        self.email_username = tk.StringVar(value="")
-        self.email_password = tk.StringVar(value="")
 
         self.create_widgets()
 
@@ -116,7 +112,7 @@ class WordToPPTApp:
         # Email checkbox
         self.email_checkbox = tk.Checkbutton(
             frame,
-            text="Изпрати PowerPoint файла по email",
+            text="Отвори в Outlook с прикачени файлове",
             variable=self.email_enabled,
             font=("Arial", 10, "bold"),
             command=self.toggle_email_options
@@ -141,34 +137,17 @@ class WordToPPTApp:
         tk.Label(frame, text="Текст:", font=("Arial", 10)).grid(
             row=11, column=0, sticky=tk.NW, pady=5
         )
-        self.email_body_text = tk.Text(frame, height=3, width=50, state=tk.DISABLED)
+        self.email_body_text = tk.Text(frame, height=4, width=50, state=tk.DISABLED)
         self.email_body_text.grid(row=11, column=1, columnspan=2, sticky=tk.W, padx=10)
 
-        # SMTP settings (compact on one row)
-        tk.Label(frame, text="SMTP:", font=("Arial", 10)).grid(
-            row=12, column=0, sticky=tk.W, pady=5
+        # Note about Outlook
+        email_note = tk.Label(
+            frame,
+            text="Note: Отваря се нов email в Microsoft Outlook с Word и PowerPoint файлове прикачени.",
+            font=("Arial", 8),
+            fg="gray"
         )
-        smtp_frame = tk.Frame(frame)
-        smtp_frame.grid(row=12, column=1, columnspan=2, sticky=tk.W, padx=10)
-
-        self.email_smtp_entry = tk.Entry(smtp_frame, textvariable=self.email_smtp_server, width=20, state=tk.DISABLED)
-        self.email_smtp_entry.pack(side=tk.LEFT)
-        tk.Label(smtp_frame, text="Port:").pack(side=tk.LEFT, padx=(10, 5))
-        self.email_port_entry = tk.Entry(smtp_frame, textvariable=self.email_smtp_port, width=5, state=tk.DISABLED)
-        self.email_port_entry.pack(side=tk.LEFT)
-
-        # Email credentials
-        tk.Label(frame, text="Username:", font=("Arial", 10)).grid(
-            row=13, column=0, sticky=tk.W, pady=5
-        )
-        self.email_username_entry = tk.Entry(frame, textvariable=self.email_username, width=30, state=tk.DISABLED)
-        self.email_username_entry.grid(row=13, column=1, sticky=tk.W, padx=10)
-
-        tk.Label(frame, text="Password:", font=("Arial", 10)).grid(
-            row=14, column=0, sticky=tk.W, pady=5
-        )
-        self.email_password_entry = tk.Entry(frame, textvariable=self.email_password, width=30, show="*", state=tk.DISABLED)
-        self.email_password_entry.grid(row=14, column=1, sticky=tk.W, padx=10)
+        email_note.grid(row=12, column=0, columnspan=3, sticky=tk.W, pady=2)
 
         # Progress text
         tk.Label(self.root, text="Статус:", font=("Arial", 10, "bold")).pack(pady=10)
@@ -239,18 +218,10 @@ class WordToPPTApp:
             self.email_recipients_entry.config(state=tk.NORMAL)
             self.email_subject_entry.config(state=tk.NORMAL)
             self.email_body_text.config(state=tk.NORMAL)
-            self.email_smtp_entry.config(state=tk.NORMAL)
-            self.email_port_entry.config(state=tk.NORMAL)
-            self.email_username_entry.config(state=tk.NORMAL)
-            self.email_password_entry.config(state=tk.NORMAL)
         else:
             self.email_recipients_entry.config(state=tk.DISABLED)
             self.email_subject_entry.config(state=tk.DISABLED)
             self.email_body_text.config(state=tk.DISABLED)
-            self.email_smtp_entry.config(state=tk.DISABLED)
-            self.email_port_entry.config(state=tk.DISABLED)
-            self.email_username_entry.config(state=tk.DISABLED)
-            self.email_password_entry.config(state=tk.DISABLED)
 
     def select_excel_file(self):
         """Select Excel file"""
@@ -294,12 +265,6 @@ class WordToPPTApp:
             if not self.email_subject.get():
                 messagebox.showerror("Грешка", "Моля въведи subject на email-а!")
                 return
-            if not self.email_username.get():
-                messagebox.showerror("Грешка", "Моля въведи email username!")
-                return
-            if not self.email_password.get():
-                messagebox.showerror("Грешка", "Моля въведи email password!")
-                return
 
         # Clear progress
         self.progress_text.delete(1.0, tk.END)
@@ -327,13 +292,9 @@ class WordToPPTApp:
                 converter.set_email_config(
                     self.email_recipients.get(),
                     self.email_subject.get(),
-                    email_body,
-                    self.email_smtp_server.get(),
-                    self.email_smtp_port.get(),
-                    self.email_username.get(),
-                    self.email_password.get()
+                    email_body
                 )
-                self.log(f"Email изпращане активирано: {self.email_recipients.get()}")
+                self.log(f"Outlook email активиран: {self.email_recipients.get()}")
 
             # Convert (this will extract data and update PowerPoint)
             output_path = converter.convert(output_dir)
