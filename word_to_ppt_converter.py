@@ -719,9 +719,23 @@ class WordToPPTConverter:
             print(f"  ✓ Outlook email created successfully!")
             print(f"  Note: Email is ready for review. Click 'Send' when ready.")
 
+        except ImportError as e:
+            print(f"  ✗ Outlook email creation failed: {e}")
+            print(f"\n  РЕШЕНИЕ:")
+            print(f"  1. Инсталирай pywin32: pip install pywin32")
+            print(f"  2. Стартирай: python Scripts/pywin32_postinstall.py -install")
+            print(f"  3. Рестартирай приложението")
         except Exception as e:
             print(f"  ✗ Outlook email creation failed: {e}")
-            print(f"  Note: Make sure Microsoft Outlook is installed on your system.")
+            print(f"\n  ВЪЗМОЖНИ ПРИЧИНИ:")
+            print(f"  1. Microsoft Outlook не е инсталиран или не е конфигуриран")
+            print(f"  2. Използваш новия Outlook (web-based) вместо класическия Desktop Outlook")
+            print(f"  3. Outlook не е стартиран поне веднъж")
+            print(f"\n  РЕШЕНИЕ за нов Outlook на Windows 11:")
+            print(f"  - Трябва да използваш класическия Outlook (Desktop версия)")
+            print(f"  - Отвори Settings → Apps → Installed Apps")
+            print(f"  - Потърси 'Outlook (classic)' или инсталирай Office Desktop версия")
+            print(f"  - Алтернативно: Използвай файловете ръчно от output папката")
 
     def convert(self, output_dir=None):
         """Main conversion method"""

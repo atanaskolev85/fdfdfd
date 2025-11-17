@@ -25,7 +25,7 @@ if errorlevel 1 (
 
 REM Проверка за необходимите библиотеки
 echo Проверка на библиотеките...
-python -c "import docx, pptx, dateutil, openpyxl" >nul 2>&1
+python -c "import docx, pptx, dateutil, openpyxl, win32com.client" >nul 2>&1
 if errorlevel 1 (
     echo.
     echo Инсталиране на необходими библиотеки...
@@ -42,6 +42,18 @@ if errorlevel 1 (
     echo.
     echo Библиотеките са инсталирани успешно!
     echo.
+
+    REM Проверка отново след инсталация
+    python -c "import docx, pptx, dateutil, openpyxl, win32com.client" >nul 2>&1
+    if errorlevel 1 (
+        echo.
+        echo ВНИМАНИЕ: Някои библиотеки не са инсталирани правилно!
+        echo Моля опитай ръчно:
+        echo   pip install pywin32
+        echo След това стартирай python Scripts/pywin32_postinstall.py -install
+        echo.
+        pause
+    )
 )
 
 REM Стартиране на GUI апликацията
