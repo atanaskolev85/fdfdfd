@@ -249,6 +249,58 @@ class WordToPPTConverter:
                             shape.text_frame.text = new_text
                             print(f"  Updated title to: Project {self.data['project_number']}")
 
+        # Update Key Intent section
+        for shape in slide.shapes:
+            if hasattr(shape, "text_frame"):
+                text = shape.text_frame.text
+
+                # Update "Repair of the mold"
+                if "Repair of the mold" in text and 'type_of_service' in self.data:
+                    service_type = self.data['type_of_service']
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if "Repair of the mold" in run.text:
+                                run.text = run.text.replace("Repair of the mold", f"{service_type} of the mold")
+                                print(f"  ✓ Updated service type to: {service_type} of the mold")
+
+                # Update "Located in Gotmar - BG0200P079"
+                if "Located in" in text or "Located" in text:
+                    if 'plant_owner' in self.data and 'plant_code' in self.data:
+                        new_location = f"Located in {self.data['plant_owner']} - {self.data['plant_code']}"
+                        for paragraph in shape.text_frame.paragraphs:
+                            para_text = paragraph.text
+                            if "Located" in para_text:
+                                # Clear all runs and set new text
+                                for run in paragraph.runs:
+                                    run.text = ""
+                                if paragraph.runs:
+                                    paragraph.runs[0].text = new_location
+                                print(f"  ✓ Updated location to: {new_location}")
+                                break
+
+                # Update "Inv Nu: SEP0431"
+                if "Inv Nu:" in text and 'se_inventory_number' in self.data:
+                    inv_num = self.data['se_inventory_number']
+                    for paragraph in shape.text_frame.paragraphs:
+                        para_text = paragraph.text
+                        if "Inv Nu:" in para_text:
+                            # Clear all runs and set new text
+                            for run in paragraph.runs:
+                                run.text = ""
+                            if paragraph.runs:
+                                paragraph.runs[0].text = f"Inv Nu: {inv_num}"
+                            print(f"  ✓ Updated inventory number to: {inv_num}")
+                            break
+
+                # Update "General state of the mold: Bad"
+                if "General state of the mold" in text:
+                    state = self.data.get('general_condition', 'Bad')
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if "General state of the mold:" in run.text:
+                                run.text = re.sub(r'General state of the mold:\s*\w+', f'General state of the mold: {state}', run.text)
+                                print(f"  ✓ Updated general state to: {state}")
+
         # Update Finance table
         for shape in slide.shapes:
             if shape.shape_type == 19:  # Table
