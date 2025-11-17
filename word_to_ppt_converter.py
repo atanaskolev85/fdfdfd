@@ -29,80 +29,98 @@ class WordToPPTConverter:
 
         try:
             with zipfile.ZipFile(self.word_path, 'r') as docx_zip:
-                try:
-                    # Read customXml/item3.xml which contains all the properties
-                    xml_content = docx_zip.read('customXml/item3.xml')
-                    root = ET.fromstring(xml_content)
+                # Try to find the correct customXml file containing properties
+                xml_content = None
+                xml_file = None
 
-                    print("  Reading data from Document Properties (customXml)...")
-                    print(f"  DEBUG: Found {len(list(root))} parent elements in XML")
+                # Try item3.xml, item4.xml, item2.xml in that order
+                for item_file in ['customXml/item3.xml', 'customXml/item4.xml', 'customXml/item2.xml']:
+                    try:
+                        if item_file in docx_zip.namelist():
+                            content = docx_zip.read(item_file)
+                            # Check if this file contains properties (not schema)
+                            if b'<p:properties' in content or b'<documentManagement>' in content:
+                                xml_content = content
+                                xml_file = item_file
+                                break
+                    except:
+                        continue
 
-                    # Extract all properties (they are children of root elements)
-                    found_tags = []
-                    for parent in root:
-                        for elem in parent:
-                            tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                            value = elem.text.strip() if elem.text else None
+                if xml_content:
+                    try:
+                        root = ET.fromstring(xml_content)
 
-                            found_tags.append(tag)
-                            if value:
-                                # Map XML tags to our data dictionary
-                                if tag == 'Plantowner':
-                                    self.data['plant_owner'] = value
-                                    print(f"  ✓ Plant owner: {value}")
-                                elif tag == 'Sitename':
-                                    self.data['plant_code'] = value
-                                    print(f"  ✓ Plant code: {value}")
-                                elif tag == 'Nameofthepart':
-                                    self.data['part_name'] = value
-                                    print(f"  ✓ Part name: {value}")
-                                elif tag == 'Ref_':
-                                    self.data['reference'] = value.replace('\n', ' ')
-                                    print(f"  ✓ Reference: {value[:30]}...")
-                                elif 'Toolnumber' in tag:
-                                    self.data['tool_number'] = value
-                                    print(f"  ✓ Tool number: {value}")
-                                elif tag == 'SEinventorynumber':
-                                    self.data['se_inventory_number'] = value
-                                    print(f"  ✓ SE inventory: {value}")
-                                elif tag == 'Inventory_number_Gormar':
-                                    self.data['gotmar_inventory'] = value
-                                elif tag == 'GeneralToolCondition':
-                                    self.data['general_condition'] = value
-                                    print(f"  ✓ General condition: {value}")
-                                elif tag == 'Typeofservice':
-                                    self.data['type_of_service'] = value
-                                    print(f"  ✓ Type of service: {value}")
-                                elif tag == 'Creationdate':
-                                    self.data['project_creation_date'] = value
-                                elif tag == 'Offercreationdate':
-                                    self.data['offer_creation_date'] = value
-                                elif tag == 'Approvaldate':
-                                    self.data['approval_date'] = value
-                                    print(f"  ✓ Approval date: {value}")
-                                elif tag == 'Finishoftheproject':
-                                    self.data['finish_estimated'] = value
-                                    print(f"  ✓ Finish date: {value}")
-                                elif tag == 'Totalcost':
-                                    self.data['total_cost'] = value
-                                    print(f"  ✓ Total cost: {value}")
-                                elif tag == 'ProjectStatus':
-                                    self.data['project_status'] = value
-                                elif tag == 'PRIORITY':
-                                    self.data['priority'] = value
-                                # Extract item descriptions
-                                elif tag.endswith('_Description') and 'x002e' in tag:
-                                    # This is an item description (1. Description, 2. Description, etc.)
-                                    if 'descriptions' not in self.data:
-                                        self.data['descriptions'] = []
-                                    self.data['descriptions'].append(value)
+                        print(f"  Reading data from Document Properties ({xml_file})...")
+                        print(f"  DEBUG: Found {len(list(root))} parent elements in XML")
 
-                    # Debug: Show what was found
-                    print(f"  DEBUG: Found {len(found_tags)} XML tags: {', '.join(set(found_tags[:20]))}")
-                    print(f"  DEBUG: Extracted data keys: {list(self.data.keys())}")
+                        # Extract all properties (they are children of root elements)
+                        found_tags = []
+                        for parent in root:
+                            for elem in parent:
+                                tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                                value = elem.text.strip() if elem.text else None
 
-                except KeyError:
-                    print("  Note: customXml/item3.xml not found, using legacy table extraction...")
+                                found_tags.append(tag)
+                                if value:
+                                    # Map XML tags to our data dictionary
+                                    if tag == 'Plantowner':
+                                        self.data['plant_owner'] = value
+                                        print(f"  ✓ Plant owner: {value}")
+                                    elif tag == 'Sitename':
+                                        self.data['plant_code'] = value
+                                        print(f"  ✓ Plant code: {value}")
+                                    elif tag == 'Nameofthepart':
+                                        self.data['part_name'] = value
+                                        print(f"  ✓ Part name: {value}")
+                                    elif tag == 'Ref_':
+                                        self.data['reference'] = value.replace('\n', ' ')
+                                        print(f"  ✓ Reference: {value[:30]}...")
+                                    elif 'Toolnumber' in tag:
+                                        self.data['tool_number'] = value
+                                        print(f"  ✓ Tool number: {value}")
+                                    elif tag == 'SEinventorynumber':
+                                        self.data['se_inventory_number'] = value
+                                        print(f"  ✓ SE inventory: {value}")
+                                    elif tag == 'Inventory_number_Gormar':
+                                        self.data['gotmar_inventory'] = value
+                                    elif tag == 'GeneralToolCondition':
+                                        self.data['general_condition'] = value
+                                        print(f"  ✓ General condition: {value}")
+                                    elif tag == 'Typeofservice':
+                                        self.data['type_of_service'] = value
+                                        print(f"  ✓ Type of service: {value}")
+                                    elif tag == 'Creationdate':
+                                        self.data['project_creation_date'] = value
+                                    elif tag == 'Offercreationdate':
+                                        self.data['offer_creation_date'] = value
+                                    elif tag == 'Approvaldate':
+                                        self.data['approval_date'] = value
+                                        print(f"  ✓ Approval date: {value}")
+                                    elif tag == 'Finishoftheproject':
+                                        self.data['finish_estimated'] = value
+                                        print(f"  ✓ Finish date: {value}")
+                                    elif tag == 'Totalcost':
+                                        self.data['total_cost'] = value
+                                        print(f"  ✓ Total cost: {value}")
+                                    elif tag == 'ProjectStatus':
+                                        self.data['project_status'] = value
+                                    elif tag == 'PRIORITY':
+                                        self.data['priority'] = value
+                                    # Extract item descriptions
+                                    elif tag.endswith('_Description') and 'x002e' in tag:
+                                        # This is an item description (1. Description, 2. Description, etc.)
+                                        if 'descriptions' not in self.data:
+                                            self.data['descriptions'] = []
+                                        self.data['descriptions'].append(value)
+
+                        # Debug: Show what was found
+                        print(f"  DEBUG: Found {len(found_tags)} XML tags: {', '.join(set(found_tags[:20]))}")
+                        print(f"  DEBUG: Extracted data keys: {list(self.data.keys())}")
+
+                    except KeyError:
+                        print("  Note: customXml properties not found, using legacy table extraction...")
+                    except Exception as e:
+                        print(f"  Warning: Error extracting from customXml ({e})")
 
         except Exception as e:
             print(f"  Note: Could not read customXml ({e}), using legacy table extraction...")
